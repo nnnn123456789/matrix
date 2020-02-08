@@ -247,7 +247,6 @@ yuanzm::matrix<_Data, n, T> yuanzm::matrix<_Data, n, T>::trans() const
 	return ret;
 }
 
-///<seealso cref="https://www.cnblogs.com/xiaoxi666/p/6421228.html"></seealso>
 ///<summary>求逆, 并返回</summary>
 template<typename _Data, int n, typename T>
 yuanzm::matrix<_Data, n, T> yuanzm::matrix<_Data, n, T>::LUP_solve_inverse() const
@@ -255,8 +254,6 @@ yuanzm::matrix<_Data, n, T> yuanzm::matrix<_Data, n, T>::LUP_solve_inverse() con
 	auto LUP_Solve = [](const matrix<_Data, n, T>& L, const matrix<_Data, n, T>& U, const vector<int, n> P, const vector<_Data, n, T>& b)->vector<_Data, length>
 	{
 		vector<_Data, n, T> x, y;
-
-		//正向替换
 		for (int i = 0; i < n; i++)
 		{
 			y[i] = b[P[i]];
@@ -265,7 +262,6 @@ yuanzm::matrix<_Data, n, T> yuanzm::matrix<_Data, n, T>::LUP_solve_inverse() con
 				y[i] = y[i] - L[i][j] * y[j];
 			}
 		}
-		//反向替换
 		for (int i = n - 1; i >= 0; i--)
 		{
 			x[i] = y[i];
@@ -296,7 +292,7 @@ yuanzm::matrix<_Data, n, T> yuanzm::matrix<_Data, n, T>::LUP_solve_inverse() con
 			{
 				throw(matrix_exception::matrix_strange);
 			}
-			//交换P[i]和P[row]
+			//swap P[i] P[row]
 			if (row != i)
 			{
 				int tmp = P[i];
@@ -306,13 +302,11 @@ yuanzm::matrix<_Data, n, T> yuanzm::matrix<_Data, n, T>::LUP_solve_inverse() con
 			_Data tmp2 = 0.0;
 			for (int j = 0; j < n; j++)
 			{
-				//交换A[i][j]和 A[row][j]
 				tmp2 = A[i][j];
 				A[i][j] = A[row][j];
 				A[row][j] = tmp2;
 			}
 
-			//以下同LU分解
 			long double u = A[i][i], l = 0.0;
 			for (int j = i + 1; j < n; j++)
 			{
@@ -324,8 +318,6 @@ yuanzm::matrix<_Data, n, T> yuanzm::matrix<_Data, n, T>::LUP_solve_inverse() con
 				}
 			}
 		}
-
-		//构造L和U
 		for (int i = 0; i < n; i++)
 		{
 			for (int j = 0; j <= i; j++)
@@ -346,13 +338,10 @@ yuanzm::matrix<_Data, n, T> yuanzm::matrix<_Data, n, T>::LUP_solve_inverse() con
 		}
 
 	};
-
-	//创建矩阵A的副本，注意不能直接用A计算，因为LUP分解算法已将其改变
 	matrix<_Data, n, T> me_copy;
-	matrix<_Data, n, T> ret; //最终的逆矩阵（还需要转置）
-	vector<_Data, n, T> inv_A_each;//矩阵逆的各列
-						//_MyType B;
-	vector<_Data, n, T> b;//b阵为B阵的列矩阵分量
+	matrix<_Data, n, T> ret; 
+	vector<_Data, n, T> inv_A_each;
+	vector<_Data, n, T> b;
 	matrix<_Data, n, T> L;
 	matrix<_Data, n, T> U;
 	vector<int, n> P;
@@ -360,16 +349,14 @@ yuanzm::matrix<_Data, n, T> yuanzm::matrix<_Data, n, T>::LUP_solve_inverse() con
 	LUP_Descomposition(me_copy, L, U, P);
 	for (int i = 0; i < length; i++)
 	{
-		//构造单位阵的每一列
 		b.init([]([[maybe_unused]] int x) { return 0; });
 		b[i] = 1;
 
 		inv_A_each = LUP_Solve(L, U, P, b);
-		std::memcpy(ret.vector<_Data, n * n>::head.get() + i * n, &inv_A_each[0], n * sizeof(_Data));//将各列拼接起来
+		std::memcpy(ret.vector<_Data, n * n>::head.get() + i * n, &inv_A_each[0], n * sizeof(_Data));
 
 	}
-	ret.dotrans();//由于现在根据每列b算出的x按行存储，因此需转置
-
+	ret.dotrans();
 	return ret;
 }
 
